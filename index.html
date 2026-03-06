@@ -1496,15 +1496,6 @@ function renderDashboard() {
     </div>`;
   });
   document.getElementById('chart-subcategories').innerHTML = subHtml;
-
-  // Nav badges
-  const catOrder = [...new Set(CONTROLS.map(c => c.category))];
-  catOrder.forEach((cat, idx) => {
-    const n = CONTROLS.filter(c => c.category === cat).length;
-    const i = CONTROLS.filter(c => c.category === cat && state[c.id].status === 'implemented').length;
-    const el = document.getElementById('nav-cat-' + idx);
-    if (el) el.textContent = `${i}/${n}`;
-  });
 }
 
 // ─────────────────────────────────────────────
@@ -1517,6 +1508,14 @@ function updateSidebar() {
   document.getElementById('sidebar-pct').textContent = pct + '%';
   document.getElementById('sidebar-progress').style.width = pct + '%';
   document.getElementById('nav-total').textContent = total;
+
+  const catOrder = [...new Set(CONTROLS.map(c => c.category))];
+  catOrder.forEach((cat, idx) => {
+    const n = CONTROLS.filter(c => c.category === cat).length;
+    const i = CONTROLS.filter(c => c.category === cat && state[c.id].status === 'implemented').length;
+    const el = document.getElementById('nav-cat-' + idx);
+    if (el) el.textContent = `${i}/${n}`;
+  });
 }
 
 // ─────────────────────────────────────────────
