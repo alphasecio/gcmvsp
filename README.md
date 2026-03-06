@@ -1,5 +1,5 @@
 # Google Cloud MVSP Checklist
-A self-contained, single-file web app for tracking your organisation's progress against the [Google Cloud Minimum Viable Secure Platform (MVSP)](https://cloud.google.com/security/minimum-viable-secure-platform) checklist. GCMVSP is a free, opinionated, 60-point checklist to establish a foundational security baseline on Google Cloud. It acts as a "quick start guide", backed by Terraform code for easy automation.
+A self-contained, single-file web app for tracking your organisation's progress against the [Google Cloud Minimum Viable Secure Platform (MVSP)](https://docs.cloud.google.com/docs/security/gcmvsp) checklist. GCMVSP is a free, opinionated, 60-point checklist to establish a foundational security baseline on Google Cloud. It acts as a "quick start guide", backed by Terraform code for easy automation.
 
 ## ✨ Features
 * 60 controls across `Authentication & Authorization`, `Organization`, `Infrastructure`, `Data Protection`, `Network Security`, and `Monitoring` domains
