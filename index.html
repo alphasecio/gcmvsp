@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="alphasec">
+<meta name="description" content="Google Cloud Minimum Viable Security Platform (MVSP) Checklist">
+<title>Google Cloud MVSP Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Google Sans loaded from Google's own CDN */
+  @font-face {
+    font-family: 'Google Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/googlesans/v58/4UaGrENHsxJlGDuGo1OIlL3Kwp5MKg.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Google Sans';
+    font-style: normal;
+    font-weight: 500;
+    src: url(https://fonts.gstatic.com/s/googlesans/v58/4UabrENHsxJlGDuGo1OIlLU94YtzCwM.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Google Sans';
+    font-style: normal;
+    font-weight: 700;
+    src: url(https://fonts.gstatic.com/s/googlesans/v58/4UabrENHsxJlGDuGo1OIlLV154tzCwM.woff2) format('woff2');
+  }
+  /* ── DARK THEME (default) ── */
+  :root, [data-theme="dark"] {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e222c;
+    --border: #2a2f3d;
+    --text: #f0f2f8;
+    --text-secondary: #c4c9d8;
+    --muted: #8b92a8;
+    --accent: #4285f4;
+    --implemented: #34a853;
+    --inprogress: #fbbc04;
+    --notreviewed: #ea4335;
+    --basic: #34a853;
+    --intermediate: #fbbc04;
+    --advanced: #4285f4;
+    --radius: 8px;
+    --font-body: 'Google Sans', 'Product Sans', Arial, sans-serif;
+    --font-mono: 'DM Mono', 'Roboto Mono', monospace;
+    --font-display: 'Google Sans', 'Product Sans', Arial, sans-serif;
+    --theme-icon: '☀️';
+    --scrollbar-thumb: #2a2f3d;
+  }
+
+  /* ── LIGHT THEME ── */
+  [data-theme="light"] {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f7;
+    --border: #d8dce8;
+    --text: #111318;
+    --text-secondary: #374151;
+    --muted: #5a6070;
+    --accent: #1a73e8;
+    --implemented: #1e7e34;
+    --inprogress: #b45309;
+    --notreviewed: #c0392b;
+    --basic: #1e7e34;
+    --intermediate: #b45309;
+    --advanced: #1a73e8;
+    --theme-icon: '🌙';
+    --scrollbar-thumb: #c8ccd8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    font-weight: 400;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 280px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  .main { flex: 1; overflow: auto; }
+
+  /* ── SIDEBAR ── */
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .logo-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .logo-text {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0;
+  }
+
+  .sidebar-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    margin-top: 8px;
+  }
+
+  .sidebar-nav { padding: 12px 0; flex: 1; }
+
+  .nav-section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 20px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 20px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 12px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    gap: 8px;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(66,133,244,0.06); }
+
+  .nav-item-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .nav-item-icon { font-size: 14px; flex-shrink: 0; }
+  .nav-item-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .nav-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4285f4, #34a853);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--border); color: var(--text); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3574e0; border-color: #3574e0; }
+  .btn-full { width: 100%; justify-content: center; margin-bottom: 8px; }
+
+  /* ── MAIN CONTENT ── */
+  .content { padding: 32px 40px; max-width: 960px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── DASHBOARD ── */
+  .page-header {
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: var(--font-mono);
+  }
+
+  .stat-card.implemented .stat-value { color: var(--implemented); }
+  .stat-card.inprogress .stat-value { color: var(--inprogress); }
+  .stat-card.notreviewed .stat-value { color: var(--notreviewed); }
+  .stat-card.total .stat-value { color: var(--text); }
+
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .chart-title {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .bar-item {
+    margin-bottom: 12px;
+  }
+
+  .bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .bar-name { color: var(--text); }
+  .bar-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+
+  .bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+    gap: 2px;
+  }
+
+  .bar-seg {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.4s ease;
+  }
+
+  .bar-seg.implemented { background: var(--implemented); }
+  .bar-seg.inprogress { background: var(--inprogress); }
+  .bar-seg.notreviewed { background: var(--notreviewed); }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  /* ── CHECKLIST ── */
+  .checklist-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .filter-chip {
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .filter-chip:hover { border-color: var(--accent); color: var(--text); }
+  .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-chip.active.implemented { background: var(--implemented); border-color: var(--implemented); }
+  .filter-chip.active.inprogress { background: var(--inprogress); border-color: var(--inprogress); color: #000; }
+  .filter-chip.active.notreviewed { background: var(--notreviewed); border-color: var(--notreviewed); }
+  .filter-chip.active.basic { background: var(--basic); border-color: var(--basic); }
+  .filter-chip.active.intermediate { background: var(--intermediate); border-color: var(--intermediate); color: #000; }
+  .filter-chip.active.advanced { background: var(--advanced); border-color: var(--advanced); }
+
+  .toolbar-sep { width: 1px; height: 20px; background: var(--border); }
+
+  .checklist-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-left: auto;
+  }
+
+  .category-section { margin-bottom: 32px; }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .category-icon { font-size: 18px; }
+
+  .category-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .category-progress {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .subcategory-section { margin-bottom: 16px; }
+
+  .subcategory-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .subcategory-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .check-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .check-item:hover { border-color: var(--accent); opacity: 1; }
+  .check-item.implemented { border-left: 3px solid var(--implemented); }
+  .check-item.inprogress { border-left: 3px solid var(--inprogress); }
+  .check-item.notreviewed { border-left: 3px solid var(--notreviewed); }
+
+  .check-item-body { flex: 1; min-width: 0; }
+
+  .check-item-tags {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+  }
+
+  .tag.basic { color: var(--basic); border-color: rgba(52,168,83,0.35); background: rgba(52,168,83,0.1); }
+  .tag.intermediate { color: var(--intermediate); border-color: rgba(251,188,4,0.35); background: rgba(251,188,4,0.1); }
+  .tag.advanced { color: var(--advanced); border-color: rgba(66,133,244,0.35); background: rgba(66,133,244,0.1); }
+
+  .check-item-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  .check-item-why {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: none;
+  }
+
+  .check-item.expanded .check-item-why { display: block; }
+
+  .check-item-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .why-toggle {
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    background: none;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s;
+  }
+
+  .why-toggle:hover { color: var(--accent); }
+
+  .status-buttons {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .status-btn {
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .status-btn:hover { border-color: var(--text); color: var(--text); }
+  .status-btn.active-implemented { background: rgba(52,168,83,0.15); border-color: var(--implemented); color: var(--implemented); }
+  .status-btn.active-inprogress { background: rgba(251,188,4,0.12); border-color: var(--inprogress); color: #e6a800; }
+  .status-btn.active-notreviewed { background: rgba(234,67,53,0.12); border-color: var(--notreviewed); color: var(--notreviewed); }
+
+  .notes-input {
+    width: 100%;
+    margin-top: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 10px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text);
+    resize: none;
+    display: none;
+    transition: border-color 0.15s;
+  }
+
+  .notes-input:focus { outline: none; border-color: var(--accent); }
+  .check-item.expanded .notes-input { display: block; }
+
+  .hidden { display: none !important; }
+
+  /* ── PDF PRINT ── */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: #fff !important; color: #111 !important; font-size: 11px; }
+    .sidebar, .checklist-toolbar, .why-toggle, .status-buttons, .btn { display: none !important; }
+    .app { display: block !important; }
+    .main { overflow: visible !important; }
+    .content { padding: 0 !important; max-width: 100% !important; }
+    .page { display: block !important; }
+    #page-dashboard { break-after: page; }
+
+    /* cards */
+    .stat-card, .chart-card { border: 1px solid #ccc !important; background: #f8f8f8 !important; }
+
+    /* stat values */
+    .stat-card.implemented .stat-value { color: #1a7a32 !important; }
+    .stat-card.inprogress .stat-value { color: #92600a !important; }
+    .stat-card.notreviewed .stat-value { color: #b03020 !important; }
+    .stat-card.total .stat-value { color: #111 !important; }
+    .stat-value { font-size: 22px !important; }
+    .stat-label { color: #444 !important; }
+
+    /* charts */
+    .chart-title { color: #444 !important; }
+    .bar-name { color: #111 !important; }
+    .bar-count { color: #555 !important; }
+    .bar-track { background: #e0e0e0 !important; }
+    .bar-seg.implemented { background: #1a7a32 !important; }
+    .bar-seg.inprogress { background: #92600a !important; }
+    .bar-seg.notreviewed { background: #b03020 !important; }
+    .legend-item { color: #444 !important; }
+
+    /* page headers */
+    .page-title { font-size: 20px !important; color: #111 !important; }
+    .page-subtitle { color: #444 !important; }
+
+    /* category / subcategory */
+    .category-header { border-bottom: 1px solid #ccc !important; }
+    .category-name { color: #111 !important; font-size: 15px !important; }
+    .subcategory-label { color: #333 !important; }
+    .subcategory-label::after { background: #ccc !important; }
+
+    /* check items */
+    .check-item { border: 1px solid #ccc !important; background: #fff !important; break-inside: avoid; margin-bottom: 6px !important; }
+    .check-item.implemented { border-left: 3px solid #1a7a32 !important; }
+    .check-item.inprogress { border-left: 3px solid #92600a !important; }
+    .check-item.notreviewed { border-left: 3px solid #b03020 !important; }
+    .check-item-text { color: #111 !important; }
+    .check-item-why { display: block !important; color: #333 !important; }
+
+    /* tags */
+    .tag.basic { color: #1a7a32 !important; border-color: #aad4b2 !important; background: #eaf5ed !important; }
+    .tag.intermediate { color: #7a5000 !important; border-color: #ffd97a !important; background: #fff8e1 !important; }
+    .tag.advanced { color: #1a4fa8 !important; border-color: #a8c0f5 !important; background: #e8f0fe !important; }
+
+    /* notes */
+    .notes-input { display: block !important; background: #f5f5f5 !important; color: #111 !important; border: 1px solid #ccc !important; }
+
+    /* print header */
+    .print-header { display: block !important; }
+    .charts-row { grid-template-columns: 1fr 1fr !important; }
+  }
+
+  .print-header {
+    display: none;
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #000;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state-icon { font-size: 32px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 13px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <!-- Google Cloud logo -->
+          <img src="https://www.gstatic.com/images/branding/product/2x/google_cloud_48dp.png"
+               width="28" height="28" alt="Google Cloud"
+               style="display:block; object-fit:contain;">
+        </div>
+        <span class="logo-text">Google Cloud</span>
+      </div>
+      <div class="sidebar-title">MVSP Checklist</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Views</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">◈</span>
+          <span class="nav-item-label">Dashboard</span>
+        </div>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">✦</span>
+          <span class="nav-item-label">All Controls</span>
+        </div>
+        <span class="nav-badge" id="nav-total">60</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Categories</div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByCategory('Authentication and authorization')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🔑</span>
+          <span class="nav-item-label">Authentication & Authorization</span>
+        </div>
+        <span class="nav-badge" id="nav-cat-0">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByCategory('Organization')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🏢</span>
+          <span class="nav-item-label">Organization</span>
+        </div>
+        <span class="nav-badge" id="nav-cat-1">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByCategory('Infrastructure')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">⚙️</span>
+          <span class="nav-item-label">Infrastructure</span>
+        </div>
+        <span class="nav-badge" id="nav-cat-2">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByCategory('Data protection')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🛡️</span>
+          <span class="nav-item-label">Data Protection</span>
+        </div>
+        <span class="nav-badge" id="nav-cat-3">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByCategory('Network security')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🌐</span>
+          <span class="nav-item-label">Network Security</span>
+        </div>
+        <span class="nav-badge" id="nav-cat-4">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByCategory('Monitoring, logging, and alerting')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">📡</span>
+          <span class="nav-item-label">Monitoring</span>
+        </div>
+        <span class="nav-badge" id="nav-cat-5">—</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="progress-label">
+        <span>Overall Progress</span>
+        <span id="sidebar-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="sidebar-progress" style="width:0%"></div>
+      </div>
+      <button class="btn btn-full btn-primary" onclick="exportPDF()">⬇ Export PDF</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" style="flex:1; justify-content:center;" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">☀️ Light</button>
+        <button class="btn" style="flex:1; justify-content:center;" onclick="resetAll()">↺ Reset</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="content">
+
+      <!-- PRINT HEADER -->
+      <div class="print-header">
+        <h1 style="font-size:22px; margin-bottom:4px;">Google Cloud Minimum Viable Secure Platform</h1>
+        <p style="font-size:12px; color:#666;">Security Controls Assessment · Generated <span id="print-date"></span></p>
+      </div>
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div class="page-title">Security Dashboard</div>
+          <div class="page-subtitle">Google Cloud Minimum Viable Secure Platform · 60 controls across 6 domains</div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card total">
+            <div class="stat-value" id="dash-total">60</div>
+            <div class="stat-label">Total Controls</div>
+          </div>
+          <div class="stat-card implemented">
+            <div class="stat-value" id="dash-implemented">0</div>
+            <div class="stat-label">Implemented</div>
+          </div>
+          <div class="stat-card inprogress">
+            <div class="stat-value" id="dash-inprogress">0</div>
+            <div class="stat-label">In Progress</div>
+          </div>
+          <div class="stat-card notreviewed">
+            <div class="stat-value" id="dash-notreviewed">60</div>
+            <div class="stat-label">Not Reviewed</div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">By Category</div>
+            <div id="chart-categories"></div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--implemented)"></div>Implemented</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--inprogress)"></div>In Progress</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--notreviewed)"></div>Not Reviewed</div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">By Level</div>
+            <div id="chart-levels"></div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--implemented)"></div>Implemented</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--inprogress)"></div>In Progress</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--notreviewed)"></div>Not Reviewed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom:24px;">
+          <div class="chart-title">By Sub-category</div>
+          <div id="chart-subcategories" style="display:grid; grid-template-columns:1fr 1fr; gap:0 32px;"></div>
+        </div>
+      </div>
+
+      <!-- CHECKLIST PAGE -->
+      <div class="page" id="page-checklist">
+        <div class="page-header">
+          <div class="page-title">Security Controls</div>
+          <div class="page-subtitle">Click a control to expand and set its status</div>
+        </div>
+
+        <div class="checklist-toolbar">
+          <div class="filter-group" id="status-filters">
+            <button class="filter-chip active" data-status="all" onclick="setStatusFilter(this)">All</button>
+            <button class="filter-chip implemented" data-status="implemented" onclick="setStatusFilter(this)">✓ Implemented</button>
+            <button class="filter-chip inprogress" data-status="inprogress" onclick="setStatusFilter(this)">◷ In Progress</button>
+            <button class="filter-chip notreviewed" data-status="notreviewed" onclick="setStatusFilter(this)">○ Not Reviewed</button>
+          </div>
+          <div class="toolbar-sep"></div>
+          <div class="filter-group" id="level-filters">
+            <button class="filter-chip active" data-level="all" onclick="setLevelFilter(this)">All Levels</button>
+            <button class="filter-chip basic" data-level="Basic" onclick="setLevelFilter(this)">Basic</button>
+            <button class="filter-chip intermediate" data-level="Intermediate" onclick="setLevelFilter(this)">Intermediate</button>
+            <button class="filter-chip advanced" data-level="Advanced" onclick="setLevelFilter(this)">Advanced</button>
+          </div>
+          <div class="checklist-count" id="checklist-count"></div>
+        </div>
+
+        <div id="checklist-body"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const CONTROLS = [
+  // ── Authentication and authorization → Identity management
+  {
+    id: 1, category: "Authentication and authorization", subcategory: "Identity management", level: "Basic",
+    text: "Decide on your source of truth for provisioning managed user identities. Patterns include creating user identities in Cloud Identity, syncing identities from an existing identity provider, or using Workforce Identity Federation.",
+    why: "This is a prerequisite to many of the other identity-related checklist items."
+  },
+  {
+    id: 2, category: "Authentication and authorization", subcategory: "Identity management", level: "Basic",
+    text: "Do not have a single super admin or org admin – select between 2 and 20.",
+    why: "A single super or org admin risks lockout scenarios and allows one person to make platform-altering changes with no oversight."
+  },
+  {
+    id: 3, category: "Authentication and authorization", subcategory: "Identity management", level: "Basic",
+    text: "Enforce strong and unique passwords for all user accounts. Consider using a password manager.",
+    why: "Weak or no credentials are still exploited by attackers. Strong, unique passwords reduce this risk."
+  },
+  {
+    id: 4, category: "Authentication and authorization", subcategory: "Identity management", level: "Intermediate",
+    text: "Set organization-wide policies that prevent adding external members to Google Groups.",
+    why: "By default, external user accounts can be added to groups in Cloud Identity. Restricting this prevents unauthorized access by external parties."
+  },
+  {
+    id: 5, category: "Authentication and authorization", subcategory: "Identity management", level: "Intermediate",
+    text: "Set session length for Google Cloud services to expire at least every day.",
+    why: "Extended sign-in sessions are a security risk. Enforcing a maximum session duration limits the window for stolen credential abuse."
+  },
+  {
+    id: 6, category: "Authentication and authorization", subcategory: "Identity management", level: "Intermediate",
+    text: "Don't allow use of unmanaged consumer accounts. Consolidate any unmanaged consumer accounts, and consider a solution to prevent the creation of further unmanaged consumer accounts with your domain.",
+    why: "Unmanaged accounts are not governed by your joiner-mover-leaver processes, risking continued access after employees leave."
+  },
+  {
+    id: 7, category: "Authentication and authorization", subcategory: "Identity management", level: "Intermediate",
+    text: "Super admin accounts are separate from day-to-day user accounts. They're dedicated and to be used only when making critical changes. Turn on multiparty approval for admin actions.",
+    why: "Multiparty approval means sensitive actions require two admins, preventing a compromised admin account from locking out other admins."
+  },
+  {
+    id: 8, category: "Authentication and authorization", subcategory: "Identity management", level: "Intermediate",
+    text: "Enable multi-factor authentication (MFA) for all Google Accounts and Cloud Identity users, not just admins.",
+    why: "Passwords alone are insufficient. MFA adds another layer of defense across all accounts."
+  },
+  {
+    id: 9, category: "Authentication and authorization", subcategory: "Identity management", level: "Advanced",
+    text: "Disable account self-recovery for super admin accounts.",
+    why: "Self-recovery is off by default for new customers. Disabling it mitigates risk that a compromised phone, email, or social engineering attack could grant an attacker super admin privileges."
+  },
+  {
+    id: 10, category: "Authentication and authorization", subcategory: "Identity management", level: "Advanced",
+    text: "Set idle session timeout to 15 minutes for sensitive use cases.",
+    why: "Idle sessions may be exploited by attackers for credential theft."
+  },
+  {
+    id: 11, category: "Authentication and authorization", subcategory: "Identity management", level: "Advanced",
+    text: "Provide hardware security keys, if possible, to super admins or org admins as a 2nd factor.",
+    why: "Hardware security keys are phishing-resistant, providing the strongest protection against account takeover for your most critical admin users."
+  },
+
+  // ── Authentication and authorization → Access management
+  {
+    id: 12, category: "Authentication and authorization", subcategory: "Access management", level: "Basic",
+    text: "Use Identity and Access Management (IAM) job functions to assign permissions based on known job functions. And if a subset is needed, use as reference for a custom role.",
+    why: "Predefined job function roles improve productivity and reduce over-privileged access."
+  },
+  {
+    id: 13, category: "Authentication and authorization", subcategory: "Access management", level: "Intermediate",
+    text: "Remove the domain-wide Project Creator and Billing Account Creator roles that are granted by default to all members in a new organization.",
+    why: "Free-form project creation and billing account proliferation lead to governance issues. Establish a project factory process instead."
+  },
+  {
+    id: 14, category: "Authentication and authorization", subcategory: "Access management", level: "Intermediate",
+    text: "Use Privileged Access Manager (PAM) for managing privileged access. For all other access, use access groups. Let group memberships expire automatically. Implement an approval workflow for group memberships.",
+    why: "Least privilege access ensures access is only granted when needed, for the resources needed, reducing sprawl."
+  },
+  {
+    id: 15, category: "Authentication and authorization", subcategory: "Access management", level: "Advanced",
+    text: "If using an external identity provider, set up post-SSO verification.",
+    why: "Enables an additional layer of control based on Google's sign-in risk analysis, adding risk-based login challenges."
+  },
+  {
+    id: 16, category: "Authentication and authorization", subcategory: "Access management", level: "Advanced",
+    text: "Enable principal access boundaries to limit principal access and protect against phishing and data exfiltration. Enable a boundary for the organization to avoid external phishing attacks.",
+    why: "Principal access boundaries reduce the blast radius of a compromised identity and prevent external phishing and exfiltration attacks."
+  },
+
+  // ── Authentication and authorization → Credential management
+  {
+    id: 17, category: "Authentication and authorization", subcategory: "Credential management", level: "Basic",
+    text: "Disallow the use of service account keys, except for cases where there are no viable alternatives.",
+    why: "Use organizational policy constraints to disable service account key creation by default, allowing them only on an exceptional basis."
+  },
+  {
+    id: 18, category: "Authentication and authorization", subcategory: "Credential management", level: "Intermediate",
+    text: "Limit over-permissioning of service accounts by setting the iam.automaticIamGrantsForDefaultServiceAccounts constraint to false.",
+    why: "By default, some systems grant overly broad permissions to automated accounts. This constraint forces deliberate, minimal permissions."
+  },
+  {
+    id: 19, category: "Authentication and authorization", subcategory: "Credential management", level: "Intermediate",
+    text: "If service account keys must be used, ensure keys are rotated at least every 90 days.",
+    why: "A rotation interval limits how long an adversary can have access. Without rotation, a compromised key grants indefinite access."
+  },
+  {
+    id: 20, category: "Authentication and authorization", subcategory: "Credential management", level: "Intermediate",
+    text: "Use Workload Identity Federation to let CI/CD systems and workloads running on other clouds authenticate to Google Cloud.",
+    why: "Workload Identity Federation avoids long-lived credentials, significantly reducing the risk of credential leakage."
+  },
+
+  // ── Organization → Resource management
+  {
+    id: 21, category: "Organization", subcategory: "Resource management", level: "Intermediate",
+    text: "Ensure only identities from your organization are allowed in your Google Cloud environment by enabling the constraints/iam.managedallowedPolicyMembers org policy or by creating a custom attribute.",
+    why: "Prevents employees from granting access to external accounts that don't follow your MFA or password policies."
+  },
+  {
+    id: 22, category: "Organization", subcategory: "Resource management", level: "Advanced",
+    text: "Consider setting location constraints on resources that can be enforced by the constraints/gcp.resourceLocations organization policy constraint.",
+    why: "Ensures your resources and data are only created and saved in approved geographic regions."
+  },
+  {
+    id: 23, category: "Organization", subcategory: "Resource management", level: "Advanced",
+    text: "Consider creating a constraint list of allowed APIs and services that can be enforced by the constraints/gcp.restrictServiceUsage organization policy constraint.",
+    why: "Creates an allowlist of approved services, preventing employees from using unvetted services."
+  },
+
+  // ── Infrastructure → Compute resource management
+  {
+    id: 24, category: "Infrastructure", subcategory: "Compute resource management", level: "Basic",
+    text: "Turn off serial port access by setting the compute.disableSerialPortAccess organization policy constraint.",
+    why: "Serial port access bypasses firewall rules and network security controls, creating a backdoor. Disabling it forces all access through audited pathways like SSH via IAP."
+  },
+  {
+    id: 25, category: "Infrastructure", subcategory: "Compute resource management", level: "Basic",
+    text: "Disable IPv6 external subnet creation unless specifically required.",
+    why: "IPv6 management gaps can create blind spots for threats. If there's no business driver for IPv6, disabling it simplifies your environment."
+  },
+  {
+    id: 26, category: "Infrastructure", subcategory: "Compute resource management", level: "Basic",
+    text: "Turn on vTPM and integrity monitoring attributes of Shielded VMs for your instances – now preselected defaults.",
+    why: "Ensures VMs boot only with trusted, unmodified code. Integrity monitoring alerts you to any malicious modifications like bootkits or rootkits."
+  },
+  {
+    id: 27, category: "Infrastructure", subcategory: "Compute resource management", level: "Intermediate",
+    text: "Use OS Login to easily manage SSH keys with IAM policies by setting the compute.requireOsLogin organization policy constraint.",
+    why: "Centralizes VM access via Google identity and IAM. Removing a user's IAM role instantly revokes access across all instances."
+  },
+  {
+    id: 28, category: "Infrastructure", subcategory: "Compute resource management", level: "Intermediate",
+    text: "Unless needed, prevent the creation of Compute Engine instances with public IP addresses by setting the compute.vmExternalIpAccess organization policy constraint.",
+    why: "Instances with public IPs are directly targetable by automated scans and attacks. Use private IPs with IAP or a bastion host instead."
+  },
+
+  // ── Infrastructure → Container resource management
+  {
+    id: 29, category: "Infrastructure", subcategory: "Container resource management", level: "Basic",
+    text: "Use GKE Autopilot clusters.",
+    why: "Autopilot clusters have robust security measures and many GKE security best practices enabled by default."
+  },
+  {
+    id: 30, category: "Infrastructure", subcategory: "Container resource management", level: "Basic",
+    text: "Use least privilege IAM service accounts for nodes.",
+    why: "Limits the blast radius if a node is compromised by granting only the minimum permissions required."
+  },
+  {
+    id: 31, category: "Infrastructure", subcategory: "Container resource management", level: "Basic",
+    text: "Restrict network access to the control plane using a DNS-based endpoint.",
+    why: "Removes the control plane from the public internet entirely, ensuring only trusted devices on your private network can manage the cluster."
+  },
+  {
+    id: 32, category: "Infrastructure", subcategory: "Container resource management", level: "Basic",
+    text: "Prefer the usage of Container-Optimized OS for a hardened and managed container OS.",
+    why: "Container-Optimized OS is a minimal, locked-down OS that reduces attack surface and has security patches automatically applied by Google."
+  },
+  {
+    id: 33, category: "Infrastructure", subcategory: "Container resource management", level: "Intermediate",
+    text: "Use Workload Identity Federation for GKE to authenticate to Google Cloud APIs from GKE workloads.",
+    why: "The simplest and safest way to obtain identities to call Google Cloud APIs from GKE workloads."
+  },
+  {
+    id: 34, category: "Infrastructure", subcategory: "Container resource management", level: "Intermediate",
+    text: "Create private nodes to reduce internet exposure.",
+    why: "Reduces internet exposure by ensuring GKE nodes do not have a public IP address."
+  },
+  {
+    id: 35, category: "Infrastructure", subcategory: "Container resource management", level: "Intermediate",
+    text: "Use Google Groups for role-based access control (RBAC), which also lets you integrate with your existing user account management practices.",
+    why: "Facilitates efficient management of cluster access using IAM and Google Groups, ideal for medium to large organizations."
+  },
+  {
+    id: 36, category: "Infrastructure", subcategory: "Container resource management", level: "Advanced",
+    text: "Use GKE Sandbox to provide an extra layer of security to prevent untrusted code from affecting the host kernel on your cluster nodes.",
+    why: "Enhances workload isolation for untrusted or sensitive workloads, protecting against container escape attacks."
+  },
+  {
+    id: 37, category: "Infrastructure", subcategory: "Container resource management", level: "Advanced",
+    text: "Use Binary Authorization to make sure trusted images are deployed to Google Kubernetes Engine.",
+    why: "Ensures only verified and trusted container images are deployed, strengthening software supply chain security."
+  },
+  {
+    id: 38, category: "Infrastructure", subcategory: "Container resource management", level: "Advanced",
+    text: "Use Confidential GKE Nodes to enforce encryption of data in-use in your nodes and workloads.",
+    why: "Secures highly sensitive workloads by encrypting data in use through confidential computing."
+  },
+  {
+    id: 39, category: "Infrastructure", subcategory: "Container resource management", level: "Advanced",
+    text: "Run your own certificate authorities and keys in GKE.",
+    why: "Gives you greater control over cryptographic operations within GKE. Contact your Google Cloud account team to request access."
+  },
+  {
+    id: 40, category: "Infrastructure", subcategory: "Container resource management", level: "Advanced",
+    text: "Encrypt Kubernetes Secrets at rest using Cloud Key Management Service (Cloud KMS) managed keys.",
+    why: "Provides an additional layer of security for etcd data by encrypting Kubernetes Secrets with a key you control."
+  },
+  {
+    id: 41, category: "Infrastructure", subcategory: "Container resource management", level: "Advanced",
+    text: "Use customer-managed encryption keys (CMEK) for node boot disk encryption.",
+    why: "Allows you to encrypt a Kubernetes node's boot disk with a key that you manage."
+  },
+
+  // ── Data protection → Storage protections
+  {
+    id: 42, category: "Data protection", subcategory: "Storage protections", level: "Basic",
+    text: "Ensure that all of your storage buckets have consistency with regard to access policy by enabling the storage.uniformBucketLevelAccess organization policy constraint.",
+    why: "Turns off the legacy ACL system and makes IAM the single source of truth for all permissions, preventing accidental data leaks."
+  },
+  {
+    id: 43, category: "Data protection", subcategory: "Storage protections", level: "Intermediate",
+    text: "Prevent storage buckets from being accessed from public sources without authentication by enabling the storage.publicAccessPrevention policy.",
+    why: "Accidentally making private data public is one of the most common and severe causes of data breaches. This policy blocks any setting that would make a bucket publicly accessible."
+  },
+
+  // ── Data protection → Encryption
+  {
+    id: 44, category: "Data protection", subcategory: "Encryption", level: "Advanced",
+    text: "Consider your encryption management strategy and use either Cloud KMS with Autokey, Cloud External Key Manager (Cloud EKM), or a combination suitable for your strategy.",
+    why: "Provides granular, auditable control over data access, including the ability to immediately block access by disabling the key."
+  },
+
+  // ── Data protection → Database security
+  {
+    id: 45, category: "Data protection", subcategory: "Database security", level: "Basic",
+    text: "Prevent Cloud SQL from having a public IP address and being directly exposed to the internet by setting the sql.restrictPublicIp organization policy constraint.",
+    why: "Databases should not be directly exposed to the public internet. This ensures they are private and only accessible from trusted, internal applications."
+  },
+  {
+    id: 46, category: "Data protection", subcategory: "Database security", level: "Intermediate",
+    text: "Ensure that BigQuery does not have datasets open to public access unless intended.",
+    why: "BigQuery datasets often contain sensitive data. This control prevents accidental or unintentional exposure to the public internet."
+  },
+
+  // ── Network security → Routing and networks
+  {
+    id: 47, category: "Network security", subcategory: "Routing and networks", level: "Basic",
+    text: "Skip default network creation by enabling the compute.skipDefaultNetworkCreation organization policy value.",
+    why: "The default network has pre-populated IPv4 firewall rules for internal communication, which is not a good security posture for production."
+  },
+  {
+    id: 48, category: "Network security", subcategory: "Routing and networks", level: "Basic",
+    text: "Enable Private Google Access on all subnets.",
+    why: "Required for accessing Google Cloud services without a public IP. Not enabled by default on new resources."
+  },
+  {
+    id: 49, category: "Network security", subcategory: "Routing and networks", level: "Intermediate",
+    text: "For applications exposed behind Cloud Load Balancing, use Google Cloud Armor default policies or configure your own policies to add Layer 3 to Layer 7 network protection.",
+    why: "Cloud Armor provides Layer 7 filtering and scrubs incoming requests for common web attacks before they reach your backend services."
+  },
+  {
+    id: 50, category: "Network security", subcategory: "Routing and networks", level: "Intermediate",
+    text: "Configure your firewalls and DNS settings to route egress traffic to Google Cloud APIs using either the private VIP or restricted VIP.",
+    why: "Using default domains requires broad egress firewall rules and may inadvertently allow egress to non-Google Cloud exfiltration paths."
+  },
+  {
+    id: 51, category: "Network security", subcategory: "Routing and networks", level: "Advanced",
+    text: "Enable VPC Service Controls as an additional layer of protection to prevent potential data loss.",
+    why: "VPC Service Controls can prevent data exfiltration by creating isolation perimeters around your cloud resources, sensitive data, and networks."
+  },
+
+  // ── Network security → Firewall management
+  {
+    id: 52, category: "Network security", subcategory: "Firewall management", level: "Intermediate",
+    text: "Limit access to external sources, as by default all access is allowed out. Set specific firewall rules for intended patterns of traffic needing to egress.",
+    why: "A 'deny by default' policy blocks all outbound traffic and requires specific rules for only known, necessary destinations."
+  },
+  {
+    id: 53, category: "Network security", subcategory: "Firewall management", level: "Intermediate",
+    text: "Limit inbound access to resources and restrict to specific resource ranges. If Identity-Aware Proxy (IAP) is configured, inbound SSH and RDP firewall rules should be set for IAP IP ranges.",
+    why: "Permissive SSH and RDP firewall rules allow brute force attacks. IAP provides a controlled, authenticated pathway instead."
+  },
+
+  // ── Monitoring, logging, and alerting → Setting alerts
+  {
+    id: 54, category: "Monitoring, logging, and alerting", subcategory: "Setting alerts", level: "Basic",
+    text: "Subscribe to security bulletin notifications.",
+    why: "Keeps you informed of vulnerabilities and mitigation measures related to Google Cloud products."
+  },
+  {
+    id: 55, category: "Monitoring, logging, and alerting", subcategory: "Setting alerts", level: "Basic",
+    text: "Configure essential contacts to ensure you receive important notifications by using a monitored group alias or mailing list.",
+    why: "Using a monitored group email ensures time-sensitive security alerts reach an active team, not just one person who may be unavailable."
+  },
+  {
+    id: 56, category: "Monitoring, logging, and alerting", subcategory: "Setting alerts", level: "Basic",
+    text: "Use the billing anomaly feature in Cloud Billing to track any spikes or deviations in expected spend.",
+    why: "A sudden spike in a cloud bill is a primary indicator of a security compromise. Billing anomaly detection provides an early warning system."
+  },
+
+  // ── Monitoring, logging, and alerting → Logging
+  {
+    id: 57, category: "Monitoring, logging, and alerting", subcategory: "Logging", level: "Intermediate",
+    text: "Turn on Firewall Rules Logging.",
+    why: "Firewall rules don't log by default. Firewall Rules Logging lets you audit, verify, and analyze the effects of your firewall rules."
+  },
+  {
+    id: 58, category: "Monitoring, logging, and alerting", subcategory: "Logging", level: "Intermediate",
+    text: "If using Cloud Identity, share audit logs from Cloud Identity to Google Cloud.",
+    why: "Admin Activity audit logs from Cloud Identity contain security-relevant events like user login events. Centralizing them enables holistic monitoring."
+  },
+  {
+    id: 59, category: "Monitoring, logging, and alerting", subcategory: "Logging", level: "Advanced",
+    text: "Ensure Access Transparency is turned on.",
+    why: "Access Transparency logs what Google support staff do when they access your account, providing a complete audit trail for compliance requirements."
+  },
+  {
+    id: 60, category: "Monitoring, logging, and alerting", subcategory: "Logging", level: "Advanced",
+    text: "Create a log sink to export logs for your security monitoring solution and set the retention period to meet your requirements.",
+    why: "Default log retention is often insufficient for compliance (PCI, HIPAA require 1–7 years). A log sink enables long-term storage and centralized threat detection."
+  }
+];
+
+const CATEGORY_ICONS = {
+  "Authentication and authorization": "🔑",
+  "Organization": "🏢",
+  "Infrastructure": "⚙️",
+  "Data protection": "🛡️",
+  "Network security": "🌐",
+  "Monitoring, logging, and alerting": "📡"
+};
+
+const CATEGORY_SHORT = {
+  "Authentication and authorization": "Authentication & Authorization",
+  "Organization": "Organization",
+  "Infrastructure": "Infrastructure",
+  "Data protection": "Data Protection",
+  "Network security": "Network Security",
+  "Monitoring, logging, and alerting": "Monitoring"
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = {}; // id → { status: 'implemented'|'inprogress'|'notreviewed'|null, notes: '' }
+let activeStatusFilter = 'all';
+let activeLevelFilter = 'all';
+let activeCategoryFilter = null;
+
+CONTROLS.forEach(c => { state[c.id] = { status: null, notes: '' }; });
+
+// ─────────────────────────────────────────────
+// PAGES
+// ─────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  if (name === 'dashboard') {
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
+    renderDashboard();
+  } else {
+    document.querySelectorAll('.nav-item')[1].classList.add('active');
+    renderChecklist();
+  }
+}
+
+// ─────────────────────────────────────────────
+// STATUS
+// ─────────────────────────────────────────────
+function setStatus(id, status) {
+  state[id].status = state[id].status === status ? null : status;
+  const item = document.getElementById('item-' + id);
+  if (item) {
+    item.className = 'check-item' + (item.classList.contains('expanded') ? ' expanded' : '');
+    if (state[id].status) item.classList.add(state[id].status);
+    item.querySelectorAll('.status-btn').forEach(btn => {
+      btn.className = 'status-btn';
+      if (btn.dataset.status === state[id].status) btn.classList.add('active-' + state[id].status);
+    });
+    applyFilters();
+  }
+  updateSidebar();
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+
+function setNotes(id, val) {
+  state[id].notes = val;
+}
+
+// ─────────────────────────────────────────────
+// FILTERS
+// ─────────────────────────────────────────────
+function setStatusFilter(el) {
+  document.querySelectorAll('#status-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeStatusFilter = el.dataset.status;
+  activeCategoryFilter = null;
+  applyFilters();
+}
+
+function setLevelFilter(el) {
+  document.querySelectorAll('#level-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeLevelFilter = el.dataset.level;
+  activeCategoryFilter = null;
+  applyFilters();
+}
+
+function filterByCategory(cat) {
+  activeCategoryFilter = cat;
+  activeStatusFilter = 'all';
+  activeLevelFilter = 'all';
+  document.querySelectorAll('#status-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#status-filters .filter-chip')[0].classList.add('active');
+  document.querySelectorAll('#level-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#level-filters .filter-chip')[0].classList.add('active');
+  renderChecklist();
+}
+
+function applyFilters() {
+  let visible = 0;
+  CONTROLS.forEach(c => {
+    const el = document.getElementById('item-' + c.id);
+    if (!el) return;
+    const s = state[c.id].status; // null | 'implemented' | 'inprogress' | 'notreviewed'
+    let statusMatch;
+    if (activeStatusFilter === 'all') {
+      statusMatch = true;
+    } else if (activeStatusFilter === 'null') {
+      statusMatch = s === null;
+    } else if (activeStatusFilter === 'notreviewed') {
+      // null (never touched) and 'notreviewed' (explicitly set) both match
+      statusMatch = s === null || s === 'notreviewed';
+    } else {
+      statusMatch = s === activeStatusFilter;
+    }
+    const levelMatch = activeLevelFilter === 'all' || c.level === activeLevelFilter;
+    const catMatch = !activeCategoryFilter || c.category === activeCategoryFilter;
+    const show = statusMatch && levelMatch && catMatch;
+    el.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  // Hide empty sections
+  document.querySelectorAll('.subcategory-section').forEach(sec => {
+    const anyVisible = [...sec.querySelectorAll('.check-item')].some(i => i.style.display !== 'none');
+    sec.style.display = anyVisible ? '' : 'none';
+  });
+  document.querySelectorAll('.category-section').forEach(sec => {
+    const anyVisible = [...sec.querySelectorAll('.subcategory-section')].some(i => i.style.display !== 'none');
+    sec.style.display = anyVisible ? '' : 'none';
+  });
+
+  document.getElementById('checklist-count').textContent = `${visible} control${visible !== 1 ? 's' : ''}`;
+}
+
+// ─────────────────────────────────────────────
+// RENDER CHECKLIST
+// ─────────────────────────────────────────────
+function renderChecklist() {
+  const body = document.getElementById('checklist-body');
+  const categories = [...new Set(CONTROLS.map(c => c.category))];
+  let html = '';
+
+  categories.forEach(cat => {
+    const catControls = CONTROLS.filter(c => c.category === cat);
+    const subcats = [...new Set(catControls.map(c => c.subcategory))];
+
+    html += `<div class="category-section">
+      <div class="category-header">
+        <span class="category-icon">${CATEGORY_ICONS[cat]}</span>
+        <span class="category-name">${cat}</span>
+      </div>`;
+
+    subcats.forEach(sub => {
+      const subControls = catControls.filter(c => c.subcategory === sub);
+      html += `<div class="subcategory-section">
+        <div class="subcategory-label">${sub}</div>`;
+
+      subControls.forEach(c => {
+        const s = state[c.id];
+        const statusClass = s.status ? ` ${s.status}` : '';
+        html += `
+        <div class="check-item${statusClass}" id="item-${c.id}" onclick="toggleExpand(${c.id}, event)">
+          <div class="check-item-body">
+            <div class="check-item-tags">
+              <span class="tag ${c.level.toLowerCase()}">${c.level}</span>
+            </div>
+            <div class="check-item-text">${c.text}</div>
+            <div class="check-item-why">${c.why}</div>
+            <textarea class="notes-input" placeholder="Add notes…" rows="2"
+              onclick="event.stopPropagation()"
+              onchange="setNotes(${c.id}, this.value)">${escapeHtml(s.notes)}</textarea>
+            <div class="check-item-footer">
+              <button class="why-toggle" onclick="event.stopPropagation(); toggleWhy(${c.id})">why?</button>
+              <div class="status-buttons" onclick="event.stopPropagation()">
+                <button class="status-btn ${s.status === 'implemented' ? 'active-implemented' : ''}" data-status="implemented" onclick="setStatus(${c.id}, 'implemented')">✓ Implemented</button>
+                <button class="status-btn ${s.status === 'inprogress' ? 'active-inprogress' : ''}" data-status="inprogress" onclick="setStatus(${c.id}, 'inprogress')">◷ In Progress</button>
+                <button class="status-btn ${s.status === 'notreviewed' ? 'active-notreviewed' : ''}" data-status="notreviewed" onclick="setStatus(${c.id}, 'notreviewed')">○ Not Reviewed</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      });
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  body.innerHTML = html;
+  applyFilters();
+}
+
+function toggleExpand(id, event) {
+  const item = document.getElementById('item-' + id);
+  item.classList.toggle('expanded');
+}
+
+function toggleWhy(id) {
+  const item = document.getElementById('item-' + id);
+  item.classList.toggle('expanded');
+}
+
+// ─────────────────────────────────────────────
+// RENDER DASHBOARD
+// ─────────────────────────────────────────────
+function renderDashboard() {
+  const total = CONTROLS.length;
+  let impl = 0, prog = 0, notrev = 0;
+  CONTROLS.forEach(c => {
+    if (state[c.id].status === 'implemented') impl++;
+    else if (state[c.id].status === 'inprogress') prog++;
+    else notrev++; // null (untouched) or 'notreviewed' both count here
+  });
+
+  document.getElementById('dash-total').textContent = total;
+  document.getElementById('dash-implemented').textContent = impl;
+  document.getElementById('dash-inprogress').textContent = prog;
+  document.getElementById('dash-notreviewed').textContent = notrev;
+
+  // Category chart
+  const categories = [...new Set(CONTROLS.map(c => c.category))];
+  let catHtml = '';
+  categories.forEach(cat => {
+    const items = CONTROLS.filter(c => c.category === cat);
+    const n = items.length;
+    const i = items.filter(c => state[c.id].status === 'implemented').length;
+    const p = items.filter(c => state[c.id].status === 'inprogress').length;
+    const r = n - i - p;
+    catHtml += `<div class="bar-item">
+      <div class="bar-header">
+        <span class="bar-name">${CATEGORY_SHORT[cat]}</span>
+        <span class="bar-count">${i}/${n}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg implemented" style="width:${(i/n*100).toFixed(1)}%"></div>
+        <div class="bar-seg inprogress" style="width:${(p/n*100).toFixed(1)}%"></div>
+        <div class="bar-seg notreviewed" style="width:${(r/n*100).toFixed(1)}%"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('chart-categories').innerHTML = catHtml;
+
+  // Level chart
+  const levels = ['Basic', 'Intermediate', 'Advanced'];
+  let lvlHtml = '';
+  levels.forEach(lv => {
+    const items = CONTROLS.filter(c => c.level === lv);
+    const n = items.length;
+    const i = items.filter(c => state[c.id].status === 'implemented').length;
+    const p = items.filter(c => state[c.id].status === 'inprogress').length;
+    const r = n - i - p;
+    lvlHtml += `<div class="bar-item">
+      <div class="bar-header">
+        <span class="bar-name">${lv}</span>
+        <span class="bar-count">${i}/${n}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg implemented" style="width:${(i/n*100).toFixed(1)}%"></div>
+        <div class="bar-seg inprogress" style="width:${(p/n*100).toFixed(1)}%"></div>
+        <div class="bar-seg notreviewed" style="width:${(r/n*100).toFixed(1)}%"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('chart-levels').innerHTML = lvlHtml;
+
+  // Subcategory chart
+  const subcats = [...new Set(CONTROLS.map(c => c.subcategory))];
+  let subHtml = '';
+  subcats.forEach(sub => {
+    const items = CONTROLS.filter(c => c.subcategory === sub);
+    const n = items.length;
+    const i = items.filter(c => state[c.id].status === 'implemented').length;
+    const p = items.filter(c => state[c.id].status === 'inprogress').length;
+    const r = n - i - p;
+    subHtml += `<div class="bar-item">
+      <div class="bar-header">
+        <span class="bar-name" style="font-size:11px">${sub}</span>
+        <span class="bar-count">${i}/${n}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg implemented" style="width:${(i/n*100).toFixed(1)}%"></div>
+        <div class="bar-seg inprogress" style="width:${(p/n*100).toFixed(1)}%"></div>
+        <div class="bar-seg notreviewed" style="width:${(r/n*100).toFixed(1)}%"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('chart-subcategories').innerHTML = subHtml;
+
+  // Nav badges
+  const catOrder = [...new Set(CONTROLS.map(c => c.category))];
+  catOrder.forEach((cat, idx) => {
+    const n = CONTROLS.filter(c => c.category === cat).length;
+    const i = CONTROLS.filter(c => c.category === cat && state[c.id].status === 'implemented').length;
+    const el = document.getElementById('nav-cat-' + idx);
+    if (el) el.textContent = `${i}/${n}`;
+  });
+}
+
+// ─────────────────────────────────────────────
+// SIDEBAR
+// ─────────────────────────────────────────────
+function updateSidebar() {
+  const answered = CONTROLS.filter(c => state[c.id].status !== null).length;
+  const total = CONTROLS.length;
+  const pct = Math.round(answered / total * 100);
+  document.getElementById('sidebar-pct').textContent = pct + '%';
+  document.getElementById('sidebar-progress').style.width = pct + '%';
+  document.getElementById('nav-total').textContent = total;
+}
+
+// ─────────────────────────────────────────────
+// EXPORT PDF
+// ─────────────────────────────────────────────
+function exportPDF() {
+  // Render checklist with all filters cleared so everything is visible
+  const prevStatus = activeStatusFilter;
+  const prevLevel = activeLevelFilter;
+  const prevCat = activeCategoryFilter;
+
+  activeStatusFilter = 'all';
+  activeLevelFilter = 'all';
+  activeCategoryFilter = null;
+
+  renderChecklist();
+
+  // Expand all items for print
+  document.querySelectorAll('.check-item').forEach(el => el.classList.add('expanded'));
+  document.getElementById('print-date').textContent = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+
+  // Restore filters after print dialog closes
+  const restoreFilters = () => {
+    activeStatusFilter = prevStatus;
+    activeLevelFilter = prevLevel;
+    activeCategoryFilter = prevCat;
+    renderChecklist();
+    window.removeEventListener('afterprint', restoreFilters);
+  };
+  window.addEventListener('afterprint', restoreFilters);
+
+  setTimeout(() => window.print(), 100);
+}
+
+// ─────────────────────────────────────────────
+// RESET
+// ─────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Reset all statuses and notes?')) return;
+  CONTROLS.forEach(c => { state[c.id] = { status: null, notes: '' }; });
+  renderChecklist();
+  renderDashboard();
+  updateSidebar();
+}
+
+// ─────────────────────────────────────────────
+// THEME
+// ─────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if (theme === 'light') {
+    btn.textContent = '🌙 Dark';
+    btn.title = 'Switch to dark mode';
+  } else {
+    btn.textContent = '☀️ Light';
+    btn.title = 'Switch to light mode';
+  }
+  try { localStorage.setItem('mvsp-theme', theme); } catch(e) {}
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+(function() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem('mvsp-theme') || 'dark'; } catch(e) {}
+  applyTheme(saved);
+})();
+
+renderChecklist();
+renderDashboard();
+updateSidebar();
+</script>
+</body>
+</html>
