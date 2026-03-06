@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="author" content="alphasec">
+<meta name="description" content="Google Cloud Minimum Viable Security Platform (MVSP) Checklist">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Google Cloud MVSP Checklist</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1309,11 +1311,13 @@ function setStatus(id, status) {
     applyFilters();
   }
   updateSidebar();
+  try { localStorage.setItem('mvsp-state', JSON.stringify(state)); } catch(e) {}
   if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
 }
 
 function setNotes(id, val) {
   state[id].notes = val;
+  try { localStorage.setItem('mvsp-state', JSON.stringify(state)); } catch(e) {}
 }
 
 // ─────────────────────────────────────────────
@@ -1644,6 +1648,7 @@ function exportPDF() {
 function resetAll() {
   if (!confirm('Reset all statuses and notes?')) return;
   CONTROLS.forEach(c => { state[c.id] = { status: null, notes: '' }; });
+  try { localStorage.setItem('mvsp-state', JSON.stringify(state)); } catch(e) {}
   renderChecklist();
   renderDashboard();
   updateSidebar();
@@ -1677,6 +1682,18 @@ function toggleTheme() {
   let saved = 'dark';
   try { saved = localStorage.getItem('mvsp-theme') || 'dark'; } catch(e) {}
   applyTheme(saved);
+  try {
+    var s = localStorage.getItem('mvsp-state');
+    if (s) {
+      var parsed = JSON.parse(s);
+      CONTROLS.forEach(function(c) {
+        if (parsed[c.id]) {
+          state[c.id].status = parsed[c.id].status || null;
+          state[c.id].notes  = parsed[c.id].notes  || '';
+        }
+      });
+    }
+  } catch(e) {}
 })();
 
 renderChecklist();
