@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="author" content="alphasec">
-<meta name="description" content="Google Cloud Minimum Viable Security Platform (MVSP) Checklist">
 <title>Google Cloud MVSP Checklist</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -485,9 +483,19 @@
 
   .check-item-tags {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 5px;
     margin-bottom: 6px;
-    flex-wrap: wrap;
+  }
+
+  .print-status {
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-left: auto;
   }
 
   .tag {
@@ -644,6 +652,7 @@
 
     /* notes */
     .notes-input { display: block !important; background: #f5f5f5 !important; color: #111 !important; border: 1px solid #ccc !important; }
+    .print-status { display: block !important; font-size: 10px !important; font-weight: 700 !important; }
 
     /* print header */
     .print-header { display: block !important; }
@@ -706,6 +715,29 @@
           <span class="nav-item-label">All Controls</span>
         </div>
         <span class="nav-badge" id="nav-total">60</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Levels</div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByLevel('Basic')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🟢</span>
+          <span class="nav-item-label">Basic</span>
+        </div>
+        <span class="nav-badge" id="nav-lvl-0">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByLevel('Intermediate')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🟡</span>
+          <span class="nav-item-label">Intermediate</span>
+        </div>
+        <span class="nav-badge" id="nav-lvl-1">—</span>
+      </div>
+      <div class="nav-item" onclick="showPage('checklist'); filterByLevel('Advanced')">
+        <div class="nav-item-left">
+          <span class="nav-item-icon">🔵</span>
+          <span class="nav-item-label">Advanced</span>
+        </div>
+        <span class="nav-badge" id="nav-lvl-2">—</span>
       </div>
 
       <div class="nav-section-label" style="margin-top:8px">Categories</div>
@@ -1265,6 +1297,15 @@ function setStatus(id, status) {
       btn.className = 'status-btn';
       if (btn.dataset.status === state[id].status) btn.classList.add('active-' + state[id].status);
     });
+    // Keep print-status badge in sync
+    const statusLabels = { implemented: '✓ Implemented', inprogress: '◷ In Progress', notreviewed: '○ Not Reviewed' };
+    const statusColors = { implemented: '#1a7a32', inprogress: '#92600a', notreviewed: '#b03020' };
+    const ps = item.querySelector('.print-status');
+    if (ps) {
+      const key = state[id].status || 'notreviewed';
+      ps.textContent = statusLabels[key];
+      ps.style.color = statusColors[key];
+    }
     applyFilters();
   }
   updateSidebar();
@@ -1302,6 +1343,18 @@ function filterByCategory(cat) {
   document.querySelectorAll('#status-filters .filter-chip')[0].classList.add('active');
   document.querySelectorAll('#level-filters .filter-chip').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('#level-filters .filter-chip')[0].classList.add('active');
+  renderChecklist();
+}
+
+function filterByLevel(level) {
+  activeLevelFilter = level;
+  activeStatusFilter = 'all';
+  activeCategoryFilter = null;
+  document.querySelectorAll('#status-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#status-filters .filter-chip')[0].classList.add('active');
+  document.querySelectorAll('#level-filters .filter-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.level === level);
+  });
   renderChecklist();
 }
 
@@ -1368,17 +1421,21 @@ function renderChecklist() {
       subControls.forEach(c => {
         const s = state[c.id];
         const statusClass = s.status ? ` ${s.status}` : '';
+        const statusLabels = { implemented: '✓ Implemented', inprogress: '◷ In Progress', notreviewed: '○ Not Reviewed' };
+        const statusColors = { implemented: '#1a7a32', inprogress: '#92600a', notreviewed: '#b03020' };
+        const printStatus = s.status || 'notreviewed';
         html += `
         <div class="check-item${statusClass}" id="item-${c.id}" onclick="toggleExpand(${c.id}, event)">
           <div class="check-item-body">
             <div class="check-item-tags">
               <span class="tag ${c.level.toLowerCase()}">${c.level}</span>
+              <span class="print-status" style="color:${statusColors[printStatus]}">${statusLabels[printStatus]}</span>
             </div>
             <div class="check-item-text">${c.text}</div>
             <div class="check-item-why">${c.why}</div>
             <textarea class="notes-input" placeholder="Add notes…" rows="2"
               onclick="event.stopPropagation()"
-              onchange="setNotes(${c.id}, this.value)">${escapeHtml(s.notes)}</textarea>
+              oninput="setNotes(${c.id}, this.value)">${escapeHtml(s.notes)}</textarea>
             <div class="check-item-footer">
               <button class="why-toggle" onclick="event.stopPropagation(); toggleWhy(${c.id})">why?</button>
               <div class="status-buttons" onclick="event.stopPropagation()">
@@ -1437,10 +1494,11 @@ function renderDashboard() {
     const i = items.filter(c => state[c.id].status === 'implemented').length;
     const p = items.filter(c => state[c.id].status === 'inprogress').length;
     const r = n - i - p;
+    const reviewed = i + p + items.filter(c => state[c.id].status === 'notreviewed').length;
     catHtml += `<div class="bar-item">
       <div class="bar-header">
         <span class="bar-name">${CATEGORY_SHORT[cat]}</span>
-        <span class="bar-count">${i}/${n}</span>
+        <span class="bar-count">${reviewed}/${n}</span>
       </div>
       <div class="bar-track">
         <div class="bar-seg implemented" style="width:${(i/n*100).toFixed(1)}%"></div>
@@ -1460,10 +1518,11 @@ function renderDashboard() {
     const i = items.filter(c => state[c.id].status === 'implemented').length;
     const p = items.filter(c => state[c.id].status === 'inprogress').length;
     const r = n - i - p;
+    const reviewed = i + p + items.filter(c => state[c.id].status === 'notreviewed').length;
     lvlHtml += `<div class="bar-item">
       <div class="bar-header">
         <span class="bar-name">${lv}</span>
-        <span class="bar-count">${i}/${n}</span>
+        <span class="bar-count">${reviewed}/${n}</span>
       </div>
       <div class="bar-track">
         <div class="bar-seg implemented" style="width:${(i/n*100).toFixed(1)}%"></div>
@@ -1483,10 +1542,11 @@ function renderDashboard() {
     const i = items.filter(c => state[c.id].status === 'implemented').length;
     const p = items.filter(c => state[c.id].status === 'inprogress').length;
     const r = n - i - p;
+    const reviewed = i + p + items.filter(c => state[c.id].status === 'notreviewed').length;
     subHtml += `<div class="bar-item">
       <div class="bar-header">
         <span class="bar-name" style="font-size:11px">${sub}</span>
-        <span class="bar-count">${i}/${n}</span>
+        <span class="bar-count">${reviewed}/${n}</span>
       </div>
       <div class="bar-track">
         <div class="bar-seg implemented" style="width:${(i/n*100).toFixed(1)}%"></div>
@@ -1496,6 +1556,7 @@ function renderDashboard() {
     </div>`;
   });
   document.getElementById('chart-subcategories').innerHTML = subHtml;
+
 }
 
 // ─────────────────────────────────────────────
@@ -1509,12 +1570,21 @@ function updateSidebar() {
   document.getElementById('sidebar-progress').style.width = pct + '%';
   document.getElementById('nav-total').textContent = total;
 
+  // Level badges — show reviewed/total for each level
+  ['Basic', 'Intermediate', 'Advanced'].forEach((level, idx) => {
+    const items = CONTROLS.filter(c => c.level === level);
+    const reviewed = items.filter(c => state[c.id].status !== null).length;
+    const el = document.getElementById('nav-lvl-' + idx);
+    if (el) el.textContent = `${reviewed}/${items.length}`;
+  });
+
+  // Category badges — show reviewed/total for each category
   const catOrder = [...new Set(CONTROLS.map(c => c.category))];
   catOrder.forEach((cat, idx) => {
-    const n = CONTROLS.filter(c => c.category === cat).length;
-    const i = CONTROLS.filter(c => c.category === cat && state[c.id].status === 'implemented').length;
+    const items = CONTROLS.filter(c => c.category === cat);
+    const reviewed = items.filter(c => state[c.id].status !== null).length;
     const el = document.getElementById('nav-cat-' + idx);
-    if (el) el.textContent = `${i}/${n}`;
+    if (el) el.textContent = `${reviewed}/${items.length}`;
   });
 }
 
@@ -1522,7 +1592,21 @@ function updateSidebar() {
 // EXPORT PDF
 // ─────────────────────────────────────────────
 function exportPDF() {
-  // Render checklist with all filters cleared so everything is visible
+  // Step 1: Flush any unsaved textarea values into state
+  document.querySelectorAll('.notes-input').forEach(el => {
+    const id = parseInt(el.closest('.check-item').id.replace('item-', ''));
+    if (!isNaN(id)) state[id].notes = el.value;
+  });
+
+  // Step 2: Ensure checklist body is populated (user may never have visited checklist page)
+  if (!document.getElementById('checklist-body').children.length) {
+    renderChecklist();
+  }
+
+  // Step 3: Refresh dashboard with current state
+  renderDashboard();
+
+  // Step 4: Save filters and show ALL items in-place (no DOM rebuild)
   const prevStatus = activeStatusFilter;
   const prevLevel = activeLevelFilter;
   const prevCat = activeCategoryFilter;
@@ -1531,18 +1615,22 @@ function exportPDF() {
   activeLevelFilter = 'all';
   activeCategoryFilter = null;
 
-  renderChecklist();
+  document.querySelectorAll('.check-item, .subcategory-section, .category-section')
+    .forEach(el => el.style.display = '');
 
-  // Expand all items for print
+  // Step 5: Expand all items
   document.querySelectorAll('.check-item').forEach(el => el.classList.add('expanded'));
+
+  // Step 6: Set print date
   document.getElementById('print-date').textContent = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
 
-  // Restore filters after print dialog closes
+  // Step 7: Restore after print
   const restoreFilters = () => {
     activeStatusFilter = prevStatus;
     activeLevelFilter = prevLevel;
     activeCategoryFilter = prevCat;
-    renderChecklist();
+    document.querySelectorAll('.check-item').forEach(el => el.classList.remove('expanded'));
+    applyFilters();
     window.removeEventListener('afterprint', restoreFilters);
   };
   window.addEventListener('afterprint', restoreFilters);
